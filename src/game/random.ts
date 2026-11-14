@@ -1,5 +1,18 @@
 export type Rng = () => number;
 
+// Captured when the module loads, so a player who later replaces Math.random or
+// crypto.getRandomValues from the console cannot rig or predict new games.
+const cryptoSource: Crypto | undefined = globalThis.crypto;
+const fillRandom = cryptoSource?.getRandomValues?.bind(cryptoSource);
+const nativeRandom = Math.random;
+const buffer = new Uint32Array(1);
+
+export const defaultRng: Rng = () => {
+  if (!fillRandom) return nativeRandom();
+  fillRandom(buffer);
+  return buffer[0] / 4294967296;
+};
+
 /** Small seedable PRNG so games and tests can be reproduced. */
 export function mulberry32(seed: number): Rng {
   let a = seed >>> 0;

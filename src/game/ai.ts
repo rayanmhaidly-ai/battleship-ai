@@ -1,7 +1,7 @@
 // The AI only ever learns what a real opponent would: the result of each of its own shots.
 // It must not import the Board module or receive ship positions in any form.
 import { BOARD_SIZE, type Coord } from './types';
-import { randomInt, shuffle, type Rng } from './random';
+import { defaultRng, randomInt, shuffle, type Rng } from './random';
 
 export type ShotResult = 'miss' | 'hit' | 'sunk';
 
@@ -36,7 +36,7 @@ export class BattleshipAI {
 
   constructor(
     fleetLengths: readonly number[],
-    private readonly rng: Rng = Math.random,
+    private readonly rng: Rng = defaultRng,
     readonly size = BOARD_SIZE,
   ) {
     if (fleetLengths.length === 0) throw new Error('Fleet must contain at least one ship');

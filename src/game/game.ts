@@ -2,7 +2,7 @@ import { BattleshipAI, type ShotReport } from './ai';
 import { Board, type PlacementError } from './board';
 import { FLEET } from './fleet';
 import { randomizeFleet } from './placement';
-import type { Rng } from './random';
+import { defaultRng, type Rng } from './random';
 import type { Coord, Orientation, ShipSpec, ShotOutcome } from './types';
 
 export type Phase = 'placing' | 'player-turn' | 'ai-turn' | 'won' | 'lost';
@@ -30,7 +30,7 @@ export class Game {
   lastAiShot: ShotEvent | null = null;
 
   constructor(
-    private readonly rng: Rng = Math.random,
+    private readonly rng: Rng = defaultRng,
     fleet: readonly ShipSpec[] = FLEET,
   ) {
     this.fleet = fleet;

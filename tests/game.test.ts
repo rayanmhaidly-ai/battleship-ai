@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FLEET } from '../src/game/fleet';
 import { Game } from '../src/game/game';
+import { Board } from '../src/game/board';
+import { randomizeFleet } from '../src/game/placement';
 import { mulberry32 } from '../src/game/random';
 
 const allCells = () =>
@@ -76,5 +78,24 @@ describe('Game', () => {
     }
     expect(game.phase).toBe('lost');
     expect(game.playerBoard.allSunk()).toBe(true);
+  });
+});
+
+describe('randomness cannot be rigged from the console', () => {
+  it('ignores Math.random being replaced after the game code has loaded', () => {
+    const original = Math.random;
+    Math.random = () => 0;
+    try {
+      const rigged = new Board();
+      randomizeFleet(rigged, FLEET, Math.random);
+      const riggedCells = JSON.stringify(rigged.placedShips.map((s) => s.cells));
+      const fleets = Array.from({ length: 5 }, () =>
+        JSON.stringify(new Game().enemyBoard.placedShips.map((s) => s.cells)),
+      );
+      expect(fleets).not.toContain(riggedCells);
+      expect(new Set(fleets).size).toBeGreaterThan(1);
+    } finally {
+      Math.random = original;
+    }
   });
 });
