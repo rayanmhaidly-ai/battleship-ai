@@ -74,3 +74,63 @@ describe('heldShipOrigin', () => {
     expect(heldShipOrigin({ row: 0, col: 0 }, 5, 'vertical', 4)).toEqual({ row: 0, col: 0 });
   });
 });
+
+describe('clicking an invalid spot while placing a ship', () => {
+  const hover = (label: string) => cellAt(label).dispatchEvent(new FocusEvent('focus'));
+  const startButton = () => document.getElementById('start') as HTMLButtonElement;
+  const selectedShipName = () =>
+    document.querySelector('.ship-option[aria-selected="true"] .name')?.textContent ?? null;
+  const preview = () => ({
+    valid: cells().filter((c) => c.classList.contains('preview')).map(coordOf),
+    invalid: cells().filter((c) => c.classList.contains('preview-invalid')).map(coordOf),
+  });
+
+  beforeEach(async () => {
+    document.body.innerHTML = html.slice(html.indexOf('<body>') + 6, html.indexOf('<script'));
+    vi.resetModules();
+    await import('../src/main');
+  });
+
+  it('does nothing until the current ship is dropped on a valid spot', () => {
+    const carrier = ['A1', 'B1', 'C1', 'D1', 'E1'];
+
+    // 1. Place the 5 ship.
+    expect(selectedShipName()).toBe('Carrier');
+    hover('A1');
+    cellAt('A1').click();
+    expect(shipsOnBoard()).toEqual({ Carrier: carrier });
+    expect(selectedShipName()).toBe('Battleship');
+
+    // 2. Hover the 4 ship over it: the preview is red.
+    hover('A1');
+    expect(preview()).toEqual({ valid: [], invalid: ['A1', 'B1', 'C1', 'D1'] });
+
+    // 3. Click there anyway, then click elsewhere on other invalid spots.
+    for (const spot of ['A1', 'C1', 'E1']) {
+      hover(spot);
+      cellAt(spot).click();
+      expect(shipsOnBoard()).toEqual({ Carrier: carrier });
+      expect(selectedShipName()).toBe('Battleship');
+      expect(preview().valid).toEqual([]);
+      expect(preview().invalid.length).toBeGreaterThan(0);
+      expect(startButton().disabled).toBe(true);
+    }
+
+    // The Battleship is still held and follows the cursor to a valid (green) spot.
+    hover('A3');
+    expect(preview()).toEqual({ valid: ['A3', 'B3', 'C3', 'D3'], invalid: [] });
+    cellAt('A3').click();
+    expect(shipsOnBoard()).toEqual({ Carrier: carrier, Battleship: ['A3', 'B3', 'C3', 'D3'] });
+    expect(selectedShipName()).toBe('Cruiser');
+
+    // Start battle stays disabled until all 5 ships are validly placed.
+    for (const row of ['5', '7', '9']) {
+      expect(startButton().disabled).toBe(true);
+      hover(`A${row}`);
+      cellAt(`A${row}`).click();
+    }
+    expect(fleetLengths()).toEqual([5, 4, 3, 3, 2]);
+    expect(selectedShipName()).toBeNull();
+    expect(startButton().disabled).toBe(false);
+  });
+});

@@ -80,15 +80,11 @@ function onPlayerBoardClick(c: Coord): void {
   } else if (ship) {
     const error = game.placePlayerShip(ship, heldOrigin(ship, c), orientation);
     if (error) {
-      if (existing) {
-        pickUp(existing, c);
-      } else {
-        hover = c;
-        playerMessage =
-          error === 'out-of-bounds'
-            ? `The ${ship.name} doesn't fit there. Try another cell or rotate.`
-            : `The ${ship.name} would overlap another ship.`;
-      }
+      hover = c;
+      playerMessage =
+        error === 'out-of-bounds'
+          ? `The ${ship.name} doesn't fit there. Try another cell or rotate.`
+          : `The ${ship.name} would overlap another ship. Pick a green spot.`;
     } else {
       selectNextShip();
       playerMessage = selectedId
