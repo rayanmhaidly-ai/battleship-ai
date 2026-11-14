@@ -1,7 +1,7 @@
 import './style.css';
 import { shipCells, type PlacedShip } from './game/board';
 import { Game, type Phase, type ShotEvent } from './game/game';
-import { heldShipOrigin } from './game/placement';
+import { firstFreeSpot, heldShipOrigin } from './game/placement';
 import { formatCoord, type Coord, type Orientation, type ShipSpec } from './game/types';
 import { BoardView, type CellView } from './ui/boardView';
 
@@ -44,9 +44,7 @@ function newGame(): void {
   aiTimer = undefined;
   game = new Game();
   orientation = 'horizontal';
-  selectedId = game.fleet[0].id;
-  grabIndex = 0;
-  hover = null;
+  selectNextShip();
   playerMessage = 'Place your ships: pick one, then click your board. Press R or tap Rotate to turn it.';
   enemyMessage = '';
   overlay.hidden = true;
@@ -63,8 +61,17 @@ function selectedShip(): ShipSpec | undefined {
 }
 
 function selectNextShip(): void {
-  selectedId = game.unplacedShips()[0]?.id ?? null;
+  selectShip(game.unplacedShips()[0]?.id ?? null);
+}
+
+// Starts the preview on the first free spot so it never sits on another ship (touch screens have no cursor to move it).
+function selectShip(id: string | null): void {
+  selectedId = id;
   grabIndex = 0;
+  const ship = selectedShip();
+  const spot = ship ? firstFreeSpot(game.playerBoard, ship, orientation) : null;
+  hover = spot?.origin ?? null;
+  if (spot) orientation = spot.orientation;
 }
 
 function heldOrigin(ship: ShipSpec, cursor: Coord): Coord {
@@ -273,8 +280,7 @@ function renderShipPicker(): void {
           pickUp(ship, ship.cells[0]);
           hover = null;
         } else {
-          selectedId = spec.id;
-          grabIndex = 0;
+          selectShip(spec.id);
           playerMessage = `Placing the ${spec.name} (${spec.length} cells).`;
         }
         render();

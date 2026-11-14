@@ -39,3 +39,23 @@ export function heldShipOrigin(
     ? { row: cursor.row, col: clamp(cursor.col - offset) }
     : { row: clamp(cursor.row - offset), col: cursor.col };
 }
+
+/**
+ * First legal spot for `spec`, scanning rows then columns from the top left, in `orientation`
+ * and then in the other orientation. Null when the ship fits nowhere.
+ */
+export function firstFreeSpot(
+  board: Board,
+  spec: ShipSpec,
+  orientation: Orientation,
+): { origin: Coord; orientation: Orientation } | null {
+  const other: Orientation = orientation === 'horizontal' ? 'vertical' : 'horizontal';
+  for (const o of [orientation, other]) {
+    for (let row = 0; row < board.size; row++) {
+      for (let col = 0; col < board.size; col++) {
+        if (board.canPlace(spec, { row, col }, o)) return { origin: { row, col }, orientation: o };
+      }
+    }
+  }
+  return null;
+}
