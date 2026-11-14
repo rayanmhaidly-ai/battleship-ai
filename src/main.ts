@@ -18,6 +18,10 @@ const resultDetail = $('result-detail');
 const playAgainBtn = $<HTMLButtonElement>('play-again');
 const gameOverBar = $('game-over-bar');
 const gameOverText = $('game-over-text');
+const battleBar = $('battle-bar');
+const restartBtn = $<HTMLButtonElement>('restart');
+const confirmOverlay = $('confirm-overlay');
+const confirmCancelBtn = $<HTMLButtonElement>('confirm-cancel');
 
 let game: Game;
 let orientation: Orientation = 'horizontal';
@@ -105,7 +109,7 @@ function rotate(): void {
 }
 
 function onEnemyBoardClick(c: Coord): void {
-  if (game.phase !== 'player-turn') return;
+  if (game.phase !== 'player-turn' || restartPending()) return;
   const event = game.playerFire(c);
   if (!event) {
     playerMessage = `You already fired at ${formatCoord(c)}. Pick another cell.`;
@@ -122,7 +126,7 @@ function onEnemyBoardClick(c: Coord): void {
 
 function aiTurn(): void {
   aiTimer = undefined;
-  if (game.phase !== 'ai-turn') return;
+  if (game.phase !== 'ai-turn' || restartPending()) return;
   const event = game.aiFire();
   const phase = currentPhase();
   enemyMessage = describe(event) + (phase === 'player-turn' ? ' Your turn.' : '');
@@ -163,6 +167,37 @@ function hideResult(): void {
   if (overlay.hidden) return;
   overlay.hidden = true;
   $('play-again-bar').focus();
+}
+
+const restartPending = () => !confirmOverlay.hidden;
+
+// The AI's pending shot is paused while the dialog is open, so it can't land after a confirmed restart.
+function openRestartConfirm(): void {
+  if (game.phase === 'placing' || restartPending()) return;
+  clearTimeout(aiTimer);
+  aiTimer = undefined;
+  confirmOverlay.hidden = false;
+  confirmCancelBtn.focus();
+}
+
+function cancelRestart(): void {
+  if (!restartPending()) return;
+  confirmOverlay.hidden = true;
+  if (game.phase === 'ai-turn') aiTimer = setTimeout(aiTurn, AI_DELAY_MS);
+  restartBtn.focus();
+}
+
+function confirmRestart(): void {
+  confirmOverlay.hidden = true;
+  newGame();
+}
+
+function renderScore(id: string, by: 'player' | 'ai'): void {
+  const { shots, hits, accuracy } = game.stats(by);
+  const el = $(id);
+  el.querySelector('[data-stat="shots"]')!.textContent = String(shots);
+  el.querySelector('[data-stat="hits"]')!.textContent = String(hits);
+  el.querySelector('[data-stat="accuracy"]')!.textContent = `${accuracy}%`;
 }
 
 function shipShapeClasses(ship: PlacedShip, c: Coord): string[] {
@@ -283,6 +318,9 @@ function render(): void {
   app.classList.toggle('battle', phase !== 'placing');
   placementEl.hidden = phase !== 'placing';
   gameOverBar.hidden = phase !== 'won' && phase !== 'lost';
+  battleBar.hidden = phase === 'placing';
+  renderScore('score-player', 'player');
+  renderScore('score-ai', 'ai');
   startBtn.disabled = !game.canStart();
   $('rotate').innerHTML = `Rotate <kbd>R</kbd> <span class="orientation">${orientation === 'horizontal' ? '↔' : '↕'}</span>`;
 
@@ -329,8 +367,15 @@ $('view-board').addEventListener('click', hideResult);
 overlay.addEventListener('click', (e) => {
   if (e.target === overlay) hideResult();
 });
+restartBtn.addEventListener('click', openRestartConfirm);
+confirmCancelBtn.addEventListener('click', cancelRestart);
+$('confirm-restart').addEventListener('click', confirmRestart);
+confirmOverlay.addEventListener('click', (e) => {
+  if (e.target === confirmOverlay) cancelRestart();
+});
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') hideResult();
+  if (e.key === 'Escape') return restartPending() ? cancelRestart() : hideResult();
+  if (restartPending()) return;
   if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) rotate();
 });
 

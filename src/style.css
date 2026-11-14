@@ -436,6 +436,62 @@ kbd {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
+/* Battle score + restart */
+.battle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.scoreboard {
+  display: grid;
+  gap: 2px;
+}
+
+.score {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.score .who {
+  min-width: 2.2em;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.score b {
+  color: var(--text);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  min-height: 36px;
+  font-size: 0.85rem;
+}
+
+.btn-danger {
+  background: var(--hit);
+  border-color: var(--hit);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #ff6b6d;
+}
+
+.dialog-confirm h2 {
+  font-size: 1.4rem;
+}
+
 /* Win / loss */
 .game-over-bar {
   display: flex;

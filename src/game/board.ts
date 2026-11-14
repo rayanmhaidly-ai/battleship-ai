@@ -69,6 +69,12 @@ export class Board {
     return this.shots.size;
   }
 
+  get hitCount(): number {
+    let hits = 0;
+    for (const mark of this.shots.values()) if (mark === 'hit') hits++;
+    return hits;
+  }
+
   validatePlacement(spec: ShipSpec, origin: Coord, orientation: Orientation): PlacementError | null {
     if (this.ships.some((s) => s.spec.id === spec.id)) return 'already-placed';
     const cells = shipCells(origin, spec.length, orientation);
