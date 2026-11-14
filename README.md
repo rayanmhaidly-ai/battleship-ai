@@ -15,7 +15,7 @@ Classic Battleship in the browser against an AI opponent that hunts and targets 
 2. **Start battle.** You fire first. Click a cell in *Enemy waters* to fire at it.
    - A dot means a miss, a flame means a hit, and a red X means a sunk ship. Once you sink an enemy ship, its outline is shown.
 3. **The AI fires back** after a short pause (about 600 ms). Its latest shot on your board gets a pulsing yellow outline, and the status line tells you what happened.
-4. Turns alternate until one fleet is sunk. A win or loss screen then shows how many shots it took, and **Play again** starts a new game. If you lose, the enemy's remaining ships are revealed.
+4. Turns alternate until one fleet is sunk. A win or loss screen then shows how many shots it took. **Play again** starts a new game. **View board** (or Esc) closes the screen so you can look over the final board; if you lost, the enemy's surviving ships are outlined. A **Play again** bar stays above the boards.
 
 The layout adapts to the screen. On desktop the two boards sit side by side. On phones they stack, with the board you're firing at on top. Every control works with touch, so the R key isn't needed.
 

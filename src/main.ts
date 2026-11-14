@@ -16,6 +16,8 @@ const overlay = $('overlay');
 const resultTitle = $('result-title');
 const resultDetail = $('result-detail');
 const playAgainBtn = $<HTMLButtonElement>('play-again');
+const gameOverBar = $('game-over-bar');
+const gameOverText = $('game-over-text');
 
 let game: Game;
 let orientation: Orientation = 'horizontal';
@@ -150,9 +152,17 @@ function showResult(): void {
     ? `You sank the enemy fleet in ${game.enemyBoard.shotCount} shots.`
     : `The AI sank your fleet in ${game.playerBoard.shotCount} shots. Its remaining ships are now revealed.`;
   overlay.dataset.result = won ? 'won' : 'lost';
+  gameOverText.textContent = won ? 'Victory! You sank the enemy fleet.' : 'Defeat. The enemy\'s surviving ships are outlined.';
+  gameOverBar.dataset.result = overlay.dataset.result;
   render();
   overlay.hidden = false;
   playAgainBtn.focus();
+}
+
+function hideResult(): void {
+  if (overlay.hidden) return;
+  overlay.hidden = true;
+  $('play-again-bar').focus();
 }
 
 function shipShapeClasses(ship: PlacedShip, c: Coord): string[] {
@@ -272,6 +282,7 @@ function render(): void {
   app.classList.toggle('placing', phase === 'placing');
   app.classList.toggle('battle', phase !== 'placing');
   placementEl.hidden = phase !== 'placing';
+  gameOverBar.hidden = phase !== 'won' && phase !== 'lost';
   startBtn.disabled = !game.canStart();
   $('rotate').innerHTML = `Rotate <kbd>R</kbd> <span class="orientation">${orientation === 'horizontal' ? '↔' : '↕'}</span>`;
 
@@ -313,7 +324,13 @@ startBtn.addEventListener('click', () => {
   render();
 });
 playAgainBtn.addEventListener('click', newGame);
+$('play-again-bar').addEventListener('click', newGame);
+$('view-board').addEventListener('click', hideResult);
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) hideResult();
+});
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideResult();
   if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) rotate();
 });
 

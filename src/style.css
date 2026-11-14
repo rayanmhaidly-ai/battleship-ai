@@ -436,7 +436,34 @@ kbd {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
-/* Win / loss dialog */
+/* Win / loss */
+.game-over-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-weight: 600;
+}
+
+.game-over-bar[data-result='won'] {
+  color: var(--valid);
+}
+
+.game-over-bar[data-result='lost'] {
+  color: var(--hit);
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
