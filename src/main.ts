@@ -135,10 +135,22 @@ function onPlayerBoardTouch(c: Coord): boolean {
   if (game.phase !== 'placing') return false;
   const ship = selectedShip();
   if (ship && touchHeld && hover) {
-    // Touching the held ship regrabs it at that cell so it doesn't jump; anywhere else moves it there.
+    // Touching the held ship regrabs it at that cell so it doesn't jump. Touching another placed ship locks
+    // the held one (only if green) and picks that ship up, like tapping it in the tray. Anywhere else moves it there.
     const i = shipCells(heldOrigin(ship, hover), ship.length, orientation).findIndex((s) => same(s, c));
-    if (i >= 0) grabIndex = i;
-    hover = c;
+    const other = i < 0 ? game.playerBoard.shipAt(c) : undefined;
+    if (other) {
+      if (!previewCells()?.valid) {
+        playerMessage = `Move the ${ship.name} to a green spot first.`;
+        render();
+        return false;
+      }
+      lockTouchHeld();
+      pickUp(other, c);
+    } else {
+      if (i >= 0) grabIndex = i;
+      hover = c;
+    }
   } else {
     const existing = game.playerBoard.shipAt(c);
     if (existing) pickUp(existing, c);
