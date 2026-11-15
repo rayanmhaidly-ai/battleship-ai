@@ -15,7 +15,7 @@ Classic Battleship in the browser against a computer opponent. Nothing to instal
 
 ## How it was built
 
-I planned the project with [Devin](https://devin.ai), and the work was delivered through reviewed pull requests (starting with [#1](https://github.com/rayanmhaidly-ai/battleship-ai/pull/1)). Each one had to pass CI and was checked in a browser before merging. Every bug found along the way is written up in [BUGS.md](BUGS.md) with its symptom, root cause and fix. Stack: TypeScript (no framework), Vite, Vitest, GitHub Actions and GitHub Pages.
+I planned the project with [Devin](https://devin.ai), and the work was delivered through reviewed pull requests (starting with [#1](https://github.com/rayanmhaidly-ai/battleship-ai/pull/1)). Each one had to pass CI, and placement changes were tested on desktop and on a real phone. Every bug found along the way is written up in [BUGS.md](BUGS.md) with its symptom, root cause and fix. Stack: TypeScript (no framework), Vite, Vitest, GitHub Actions and GitHub Pages.
 
 ## How the AI plays
 
