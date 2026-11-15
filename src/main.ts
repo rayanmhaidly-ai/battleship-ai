@@ -1,6 +1,7 @@
 import './style.css';
 import { shipCells, type PlacedShip } from './game/board';
 import { Game, type Phase, type ShotEvent } from './game/game';
+import { heldShipOrigin } from './game/placement';
 import { formatCoord, type Coord, type Orientation, type ShipSpec } from './game/types';
 import { BoardView, type CellView } from './ui/boardView';
 
@@ -22,6 +23,8 @@ const gameOverText = $('game-over-text');
 let game: Game;
 let orientation: Orientation = 'horizontal';
 let selectedId: string | null = null;
+// Which cell of the selected ship sits under the cursor (0 = bow).
+let grabIndex = 0;
 let hover: Coord | null = null;
 let aiTimer: ReturnType<typeof setTimeout> | undefined;
 let playerMessage = '';
@@ -42,6 +45,7 @@ function newGame(): void {
   game = new Game();
   orientation = 'horizontal';
   selectedId = game.fleet[0].id;
+  grabIndex = 0;
   hover = null;
   playerMessage = 'Place your ships: pick one, then click your board. Press R or tap Rotate to turn it.';
   enemyMessage = '';
@@ -60,6 +64,11 @@ function selectedShip(): ShipSpec | undefined {
 
 function selectNextShip(): void {
   selectedId = game.unplacedShips()[0]?.id ?? null;
+  grabIndex = 0;
+}
+
+function heldOrigin(ship: ShipSpec, cursor: Coord): Coord {
+  return heldShipOrigin(cursor, ship.length, orientation, grabIndex, game.playerBoard.size);
 }
 
 function onPlayerBoardClick(c: Coord): void {
@@ -69,7 +78,7 @@ function onPlayerBoardClick(c: Coord): void {
   if (existing && !ship) {
     pickUp(existing, c);
   } else if (ship) {
-    const error = game.placePlayerShip(ship, c, orientation);
+    const error = game.placePlayerShip(ship, heldOrigin(ship, c), orientation);
     if (error) {
       if (existing) {
         pickUp(existing, c);
@@ -94,6 +103,7 @@ function pickUp(ship: PlacedShip, c: Coord): void {
   game.removePlayerShip(ship.spec.id);
   selectedId = ship.spec.id;
   orientation = ship.orientation;
+  grabIndex = Math.max(0, ship.cells.findIndex((s) => same(s, c)));
   hover = c;
   playerMessage = `Moving the ${ship.spec.name}. Click to drop it somewhere else.`;
 }
@@ -177,8 +187,9 @@ function shipShapeClasses(ship: PlacedShip, c: Coord): string[] {
 function previewCells(): { keys: Set<string>; valid: boolean } | null {
   const ship = selectedShip();
   if (game.phase !== 'placing' || !ship || !hover) return null;
-  const valid = game.playerBoard.canPlace(ship, hover, orientation);
-  const keys = new Set(shipCells(hover, ship.length, orientation).map((c) => `${c.row},${c.col}`));
+  const origin = heldOrigin(ship, hover);
+  const valid = game.playerBoard.canPlace(ship, origin, orientation);
+  const keys = new Set(shipCells(origin, ship.length, orientation).map((c) => `${c.row},${c.col}`));
   return { keys, valid };
 }
 
@@ -267,6 +278,7 @@ function renderShipPicker(): void {
           hover = null;
         } else {
           selectedId = spec.id;
+          grabIndex = 0;
           playerMessage = `Placing the ${spec.name} (${spec.length} cells).`;
         }
         render();
