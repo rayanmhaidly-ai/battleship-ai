@@ -64,11 +64,16 @@ function selectNextShip(): void {
   selectShip(game.unplacedShips()[0]?.id ?? null);
 }
 
-// Starts the preview on the first free spot so it never sits on another ship (touch screens have no cursor to move it).
+// Starts the preview under the mouse cursor if it is on the board. Otherwise (touch screens have no cursor)
+// it starts on the first free spot, so it never sits on another ship.
 function selectShip(id: string | null): void {
   selectedId = id;
   grabIndex = 0;
   const ship = selectedShip();
+  if (ship && playerView.mouseCell) {
+    hover = playerView.mouseCell;
+    return;
+  }
   const spot = ship ? firstFreeSpot(game.playerBoard, ship, orientation) : null;
   hover = spot?.origin ?? null;
   if (spot) orientation = spot.orientation;
@@ -93,6 +98,7 @@ function onPlayerBoardClick(c: Coord): void {
           ? `The ${ship.name} doesn't fit there. Try another cell or rotate.`
           : `The ${ship.name} would overlap another ship. Pick a green spot.`;
     } else {
+      playerView.ignoreEarlierPresses();
       selectNextShip();
       playerMessage = selectedId
         ? `${ship.name} placed. Next: ${selectedShip()!.name}.`
