@@ -20,6 +20,10 @@
         <button type="button" id="play-again-bar" class="btn btn-primary">Play again</button>
       </section>
 
+      <section id="battle-bar" class="battle-bar" aria-label="Game controls" hidden>
+        <button type="button" id="restart" class="btn btn-small">Restart</button>
+      </section>
+
       <section id="placement" class="placement" aria-label="Place your fleet">
         <div class="ship-picker" id="ship-picker" role="listbox" aria-label="Ships to place"></div>
         <div class="controls">
@@ -59,6 +63,17 @@
         <div class="dialog-actions">
           <button type="button" id="view-board" class="btn">View board</button>
           <button type="button" id="play-again" class="btn btn-primary">Play again</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirm-overlay" class="overlay" hidden>
+      <div class="dialog dialog-confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-detail">
+        <h2 id="confirm-title">Restart the game?</h2>
+        <p id="confirm-detail">Your current progress will be lost.</p>
+        <div class="dialog-actions">
+          <button type="button" id="confirm-cancel" class="btn">Cancel</button>
+          <button type="button" id="confirm-restart" class="btn btn-danger">Restart</button>
         </div>
       </div>
     </div>
