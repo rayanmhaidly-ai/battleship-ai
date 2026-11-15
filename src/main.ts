@@ -330,14 +330,6 @@ function confirmRestart(): void {
   newGame();
 }
 
-function renderScore(id: string, by: 'player' | 'ai'): void {
-  const { shots, hits, accuracy } = game.stats(by);
-  const el = $(id);
-  el.querySelector('[data-stat="shots"]')!.textContent = String(shots);
-  el.querySelector('[data-stat="hits"]')!.textContent = String(hits);
-  el.querySelector('[data-stat="accuracy"]')!.textContent = `${accuracy}%`;
-}
-
 function shipShapeClasses(ship: PlacedShip, c: Coord): string[] {
   const index = ship.cells.findIndex((s) => s.row === c.row && s.col === c.col);
   const dir = ship.orientation === 'horizontal' ? 'h' : 'v';
@@ -460,8 +452,6 @@ function render(): void {
   placementEl.hidden = phase !== 'placing';
   gameOverBar.hidden = phase !== 'won' && phase !== 'lost';
   battleBar.hidden = phase === 'placing';
-  renderScore('score-player', 'player');
-  renderScore('score-ai', 'ai');
   startBtn.disabled = !game.canStart() && !canLockLastAndStart();
   // During placement a finger on the board drags ships, so it must not scroll or zoom the page.
   playerView.root.classList.toggle('no-touch-scroll', phase === 'placing');

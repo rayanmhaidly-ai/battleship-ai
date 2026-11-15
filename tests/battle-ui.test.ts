@@ -27,9 +27,6 @@ const dialogOpen = () => !$('confirm-overlay').hidden;
 const boardCells = (id: string) => [...document.querySelectorAll<HTMLButtonElement>(`#${id} .cell`)];
 const marked = (id: string, cls: string) => boardCells(id).filter((c) => c.classList.contains(cls)).length;
 const boardSnapshot = (id: string) => boardCells(id).map((c) => `${c.getAttribute('aria-label')} ${c.className}`);
-const stat = (who: 'player' | 'ai', name: 'shots' | 'hits' | 'accuracy') =>
-  $(`score-${who}`).querySelector(`[data-stat="${name}"]`)!.textContent;
-const score = (who: 'player' | 'ai') => [stat(who, 'shots'), stat(who, 'hits'), stat(who, 'accuracy')];
 
 function fireAt(c: Coord): void {
   const label = formatCoord(c);
@@ -51,37 +48,6 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.useRealTimers();
-});
-
-describe('score counter', () => {
-  it('is hidden during setup and starts at zero for both sides', () => {
-    expect($('battle-bar').hidden).toBe(true);
-    startBattle();
-    expect($('battle-bar').hidden).toBe(false);
-    expect(score('player')).toEqual(['0', '0', '0%']);
-    expect(score('ai')).toEqual(['0', '0', '0%']);
-  });
-
-  it("updates shots, hits and accuracy for you and the AI after every shot", () => {
-    startBattle();
-    const shipCells = game().enemyBoard.placedShips.flatMap((s) => s.cells);
-    const water = boardCells('enemy-board')
-      .map((_, i) => ({ row: Math.floor(i / 10), col: i % 10 }))
-      .filter((c) => !game().enemyBoard.shipAt(c));
-    for (let round = 1; round <= 6; round++) {
-      fireAt(round % 3 === 0 ? water[round] : shipCells[round]);
-      const hits = marked('enemy-board', 'hit');
-      expect(score('player')).toEqual([String(round), String(hits), `${Math.round((hits / round) * 100)}%`]);
-      // The AI hasn't fired yet this round.
-      expect(stat('ai', 'shots')).toBe(String(round - 1));
-
-      vi.advanceTimersByTime(AI_DELAY_MS);
-      const aiHits = marked('player-board', 'hit');
-      expect(score('ai')).toEqual([String(round), String(aiHits), `${Math.round((aiHits / round) * 100)}%`]);
-      expect(score('ai')).toEqual(Object.values(game().stats('ai')).map((v, i) => (i === 2 ? `${v}%` : String(v))));
-    }
-    expect(score('player')).toEqual(['6', '4', '67%']);
-  });
 });
 
 describe('restart button', () => {
@@ -129,10 +95,6 @@ describe('restart button', () => {
     expect(game().enemyBoard.placedShips).toHaveLength(5);
     expect(game().enemyBoard.shotCount).toBe(0);
     expect(game().playerBoard.shotCount).toBe(0);
-
-    startBattle();
-    expect(score('player')).toEqual(['0', '0', '0%']);
-    expect(score('ai')).toEqual(['0', '0', '0%']);
   });
 
   it('Cancel returns to the game exactly as it was, and a paused AI turn then goes ahead', () => {
@@ -143,7 +105,6 @@ describe('restart button', () => {
       status: $('status').textContent,
       player: boardSnapshot('player-board'),
       enemy: boardSnapshot('enemy-board'),
-      score: [score('player'), score('ai')],
     };
 
     $('restart').click();
@@ -157,13 +118,12 @@ describe('restart button', () => {
       status: $('status').textContent,
       player: boardSnapshot('player-board'),
       enemy: boardSnapshot('enemy-board'),
-      score: [score('player'), score('ai')],
     }).toEqual(before);
     expect(document.activeElement).toBe($('restart'));
 
     vi.advanceTimersByTime(AI_DELAY_MS);
     expect(phase()).toBe('player-turn');
-    expect(stat('ai', 'shots')).toBe('1');
+    expect(game().playerBoard.shotCount).toBe(1);
   });
 
   it('treats Esc and a click outside the dialog as Cancel, but not a click inside it', () => {

@@ -20,13 +20,6 @@ export function toReport(outcome: ShotOutcome): ShotReport {
     : { result: outcome.result };
 }
 
-export interface ShotStats {
-  shots: number;
-  hits: number;
-  /** Hits as a whole-number percentage of shots; 0 before the first shot. */
-  accuracy: number;
-}
-
 export class Game {
   readonly fleet: readonly ShipSpec[];
   readonly playerBoard = new Board();
@@ -99,14 +92,6 @@ export class Game {
     this.lastAiShot = event;
     this.phase = this.playerBoard.allSunk() ? 'lost' : 'player-turn';
     return event;
-  }
-
-  /** Shots fired by `by` (the player fires at the enemy board, the AI at the player's). */
-  stats(by: 'player' | 'ai'): ShotStats {
-    const board = by === 'player' ? this.enemyBoard : this.playerBoard;
-    const shots = board.shotCount;
-    const hits = board.hitCount;
-    return { shots, hits, accuracy: shots === 0 ? 0 : Math.round((hits / shots) * 100) };
   }
 
   private assertPhase(expected: Phase): void {

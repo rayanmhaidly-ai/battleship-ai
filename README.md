@@ -9,7 +9,6 @@ Classic Battleship in the browser against a computer opponent. Nothing to instal
 ## Features
 
 - **Ship placement:** place your five ships by hand (click or tap, press R or tap Rotate to turn them) or randomize them, and move any ship before the battle starts.
-- **Score counter:** during battle, a compact bar shows shots fired, hits and accuracy % for you and for the AI, updated after every shot.
 - **Restart:** a Restart button is available as soon as the battle starts. It asks for confirmation in the page ("Restart the game? Your current progress will be lost."). Restart takes you back to setup against a fresh enemy fleet. Cancel, Esc or a click outside the dialog returns you to the game exactly as it was. The AI's turn is paused while the dialog is open, so it can't fire after you restart.
 - **Touch placement on phones and tablets.** Tap a ship in the tray, then touch your board: the ship appears under your finger and follows it while you drag (Rotate turns it, even mid-drag). Tapping the next ship locks the current one in place; a ship on a red spot never locks. Touch a placed ship to pick it up and drag it, or tap another square. While you hold a ship, touching another placed ship locks the held one (only if it's on green) and picks the touched one up. The page doesn't scroll or zoom while you drag on your board. Mouse placement on desktop is unchanged.
 - **Works on mobile:** the boards stack on small screens and everything works by tapping.
@@ -35,7 +34,7 @@ Tests ([Vitest](https://vitest.dev)) in [`tests/`](tests/) cover:
 
 - **Rules:** ship placement (no overlaps, nothing off the board), hits, misses, sinking, turn order and winning.
 - **AI behaviour:** never repeats a shot (checked over 500 full games), averages under 65 shots, follows up hits correctly and finishes off ships that touch each other.
-- **Battle screen:** the score counters after every shot, and Restart, Cancel, Esc and click-outside on the restart dialog, including a restart while the AI is mid-turn. These run against the real page in [jsdom](https://github.com/jsdom/jsdom).
+- **Battle screen:** Restart, Cancel, Esc and click-outside on the restart dialog, including a restart while the AI is mid-turn. These run against the real page in [jsdom](https://github.com/jsdom/jsdom).
 - **No cheating:** the AI's code can't import the board and holds no reference to it. Replaying a game using only the shot results, with no board at all, produces the same moves.
 
 [GitHub Actions](.github/workflows/deploy.yml) runs the tests and a type-checked build on every pull request. Every merge to `main` deploys the site to GitHub Pages.
