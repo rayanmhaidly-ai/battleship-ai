@@ -217,6 +217,13 @@ kbd {
   user-select: none;
 }
 
+/* While placing, a finger on the board drags ships, so it must not scroll or pinch-zoom the page. */
+.board.no-touch-scroll,
+.board.no-touch-scroll .cell {
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
 .board.active {
   border-color: var(--accent);
 }

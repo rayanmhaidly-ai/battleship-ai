@@ -26,6 +26,12 @@ let selectedId: string | null = null;
 // Which cell of the selected ship sits under the cursor (0 = bow).
 let grabIndex = 0;
 let hover: Coord | null = null;
+// Touch/pen flow: true while the selected ship sits where a finger put it. It stays movable until it is
+// locked by tapping a ship in the tray (or Start battle, for the last one).
+let touchHeld = false;
+let lastPointerType = '';
+document.addEventListener('pointerdown', (e) => (lastPointerType = e.pointerType), true);
+const usingTouch = () => lastPointerType === 'touch' || lastPointerType === 'pen';
 let aiTimer: ReturnType<typeof setTimeout> | undefined;
 let playerMessage = '';
 let enemyMessage = '';
@@ -35,6 +41,17 @@ const playerView = new BoardView($('player-board'), {
   onHover: (c) => {
     hover = c;
     if (game.phase === 'placing') render();
+  },
+  onTouchDown: onPlayerBoardTouch,
+  onTouchMove: (c) => {
+    if (!touchHeld) return;
+    hover = c;
+    touchMessage();
+    render();
+  },
+  onTouchUp: () => {
+    touchMessage();
+    render();
   },
 });
 const enemyView = new BoardView($('enemy-board'), { onClick: onEnemyBoardClick });
@@ -66,9 +83,15 @@ function selectNextShip(): void {
 
 // Starts the preview under the mouse cursor if it is on the board. Otherwise (touch screens have no cursor)
 // it starts on the first free spot, so it never sits on another ship.
+// With touch the ship stays off the board until a finger puts it there.
 function selectShip(id: string | null): void {
   selectedId = id;
   grabIndex = 0;
+  touchHeld = false;
+  if (usingTouch()) {
+    hover = null;
+    return;
+  }
   const ship = selectedShip();
   if (ship && playerView.mouseCell) {
     hover = playerView.mouseCell;
@@ -106,6 +129,90 @@ function onPlayerBoardClick(c: Coord): void {
     }
   }
   render();
+}
+
+function onPlayerBoardTouch(c: Coord): boolean {
+  if (game.phase !== 'placing') return false;
+  const ship = selectedShip();
+  if (ship && touchHeld && hover) {
+    // Touching the held ship regrabs it at that cell so it doesn't jump; anywhere else moves it there.
+    const i = shipCells(heldOrigin(ship, hover), ship.length, orientation).findIndex((s) => same(s, c));
+    if (i >= 0) grabIndex = i;
+    hover = c;
+  } else {
+    const existing = game.playerBoard.shipAt(c);
+    if (existing) pickUp(existing, c);
+    else if (ship) {
+      grabIndex = 0;
+      hover = c;
+    } else return false;
+  }
+  touchHeld = true;
+  touchMessage();
+  render();
+  return true;
+}
+
+function touchMessage(): void {
+  const ship = selectedShip();
+  if (!ship || !touchHeld) return;
+  const lockHow =
+    game.unplacedShips().length === 1
+      ? 'press Start battle (or tap it in the tray) to lock it'
+      : 'tap the next ship in the tray to lock it';
+  playerMessage = previewCells()?.valid
+    ? `Drag the ${ship.name} or tap another square. Then ${lockHow}.`
+    : `The ${ship.name} can't go there. Drag it to a green spot.`;
+}
+
+// Locks the ship a finger placed. Returns false, and leaves it held, if it sits on a red spot.
+function lockTouchHeld(): boolean {
+  const ship = selectedShip();
+  if (!touchHeld || !ship || !hover) return true;
+  if (game.placePlayerShip(ship, heldOrigin(ship, hover), orientation)) {
+    playerMessage = `The ${ship.name} is on a red spot. Drag it to a green spot first.`;
+    return false;
+  }
+  playerView.ignoreEarlierPresses();
+  touchHeld = false;
+  selectedId = null;
+  hover = null;
+  return true;
+}
+
+function canLockLastAndStart(): boolean {
+  return touchHeld && game.unplacedShips().length === 1 && !!previewCells()?.valid;
+}
+
+function onTrayTouch(spec: ShipSpec): void {
+  const current = selectedShip();
+  if (current && touchHeld) {
+    if (!lockTouchHeld()) return;
+    if (current.id === spec.id) {
+      selectNextShip();
+      playerMessage = selectedId
+        ? `${current.name} locked. Next: touch your board where the ${selectedShip()!.name} should go.`
+        : 'Fleet ready. Press Start battle, or touch a ship to move it.';
+      return;
+    }
+    playerMessage = `${current.name} locked. `;
+  } else if (current?.id === spec.id) {
+    // Already selected (or a repeated tap): just take it off the board until a finger puts it down.
+    hover = null;
+    return;
+  } else {
+    playerMessage = '';
+  }
+  const placed = game.playerBoard.placedShips.find((s) => s.spec.id === spec.id);
+  if (placed) {
+    // It stays where it is, held, so it can be dragged or moved with a tap.
+    pickUp(placed, placed.cells[0]);
+    touchHeld = true;
+    touchMessage();
+  } else {
+    selectShip(spec.id);
+    playerMessage += `Touch your board where the ${spec.name} should go.`;
+  }
 }
 
 function pickUp(ship: PlacedShip, c: Coord): void {
@@ -281,7 +388,9 @@ function renderShipPicker(): void {
       btn.setAttribute('aria-selected', String(spec.id === selectedId));
       btn.innerHTML = `<span class="name">${spec.name}</span><span class="pips">${'<i class="pip"></i>'.repeat(spec.length)}</span>`;
       btn.addEventListener('click', () => {
-        if (placed) {
+        if (usingTouch()) {
+          onTrayTouch(spec);
+        } else if (placed) {
           const ship = game.playerBoard.placedShips.find((s) => s.spec.id === spec.id)!;
           pickUp(ship, ship.cells[0]);
           hover = null;
@@ -303,7 +412,9 @@ function render(): void {
   app.classList.toggle('battle', phase !== 'placing');
   placementEl.hidden = phase !== 'placing';
   gameOverBar.hidden = phase !== 'won' && phase !== 'lost';
-  startBtn.disabled = !game.canStart();
+  startBtn.disabled = !game.canStart() && !canLockLastAndStart();
+  // During placement a finger on the board drags ships, so it must not scroll or zoom the page.
+  playerView.root.classList.toggle('no-touch-scroll', phase === 'placing');
   $('rotate').innerHTML = `Rotate <kbd>R</kbd> <span class="orientation">${orientation === 'horizontal' ? '↔' : '↕'}</span>`;
 
   statusEl.replaceChildren(
@@ -322,10 +433,20 @@ function render(): void {
   renderFleet('enemy-fleet', game.enemyBoard.placedShips, game.fleet, true);
 }
 
-$('rotate').addEventListener('click', rotate);
+// A second finger on Rotate while the first drags a ship: browsers send no click for it, so rotate on the press.
+let rotatedOnPress = false;
+$('rotate').addEventListener('pointerdown', (e) => {
+  rotatedOnPress = e.pointerType !== 'mouse' && playerView.dragging;
+  if (rotatedOnPress) rotate();
+});
+$('rotate').addEventListener('click', () => {
+  if (!rotatedOnPress) rotate();
+  rotatedOnPress = false;
+});
 $('randomize').addEventListener('click', () => {
   game.randomizePlayerFleet();
   selectedId = null;
+  touchHeld = false;
   playerMessage = 'Fleet placed at random. Click a ship to move it, or press Start battle.';
   render();
 });
@@ -336,9 +457,11 @@ $('reset').addEventListener('click', () => {
   render();
 });
 startBtn.addEventListener('click', () => {
+  if (canLockLastAndStart()) lockTouchHeld();
   if (!game.canStart()) return;
   game.start();
   hover = null;
+  touchHeld = false;
   playerMessage = 'Battle stations! Fire at the enemy waters.';
   enemyMessage = '';
   render();
