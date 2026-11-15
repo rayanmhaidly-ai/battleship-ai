@@ -6,6 +6,10 @@ Classic Battleship in the browser against a computer opponent. Nothing to instal
 
 ![A game in progress: your fleet on the left, enemy waters on the right](docs/screenshot.png)
 
+## Features
+
+- **Touch placement on phones and tablets.** Tap a ship in the tray, then touch your board: the ship appears under your finger and follows it while you drag (Rotate turns it, even mid-drag). Tapping the next ship locks the current one in place; a ship on a red spot never locks. Touch a placed ship to pick it up and drag it, or tap another square. The page doesn't scroll or zoom while you drag on your board. Mouse placement on desktop is unchanged.
+
 ## How it was built
 
 I planned the project with [Devin](https://devin.ai), and the work was delivered through reviewed pull requests (starting with [#1](https://github.com/rayanmhaidly-ai/battleship-ai/pull/1)). Each one had to pass CI and was checked in a browser before merging. Every bug found along the way is written up in [BUGS.md](BUGS.md) with its symptom, root cause and fix. Stack: TypeScript (no framework), Vite, Vitest, GitHub Actions and GitHub Pages.
