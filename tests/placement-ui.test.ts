@@ -511,6 +511,64 @@ describe('placing ships by touch', () => {
     expect(shipsOnBoard()).toEqual({ Carrier: ['A2', 'B2', 'C2', 'D2', 'E2'] });
   });
 
+  it('touching another placed ship while holding a green one locks it and picks that ship up', () => {
+    trayTap('Carrier');
+    tap('A1');
+    trayTap('Battleship');
+    tap('A3');
+    expect(preview()).toEqual({ valid: ['A3', 'B3', 'C3', 'D3'], invalid: [] });
+
+    finger.down('C1');
+    expect(shipsOnBoard()).toEqual({ Battleship: ['A3', 'B3', 'C3', 'D3'] });
+    expect(selectedShipName()).toBe('Carrier');
+    expect(preview()).toEqual({ valid: ['A1', 'B1', 'C1', 'D1', 'E1'], invalid: [] });
+    // The same press drags the picked-up ship, by the cell that was touched.
+    finger.moveTo('C6');
+    finger.up(true);
+    expect(preview()).toEqual({ valid: ['A6', 'B6', 'C6', 'D6', 'E6'], invalid: [] });
+    expect(shipsOnBoard()).toEqual({ Battleship: ['A3', 'B3', 'C3', 'D3'] });
+
+    // A tap fired twice (repeated click, then a full second tap) changes nothing more.
+    clickEvent(cellAt('C6'), 1);
+    tap('C6', 2);
+    expect(preview()).toEqual({ valid: ['A6', 'B6', 'C6', 'D6', 'E6'], invalid: [] });
+    expect(selectedShipName()).toBe('Carrier');
+    expect(shipsOnBoard()).toEqual({ Battleship: ['A3', 'B3', 'C3', 'D3'] });
+  });
+
+  it('touching another placed ship while holding a red one does nothing but explain', () => {
+    trayTap('Carrier');
+    tap('A1');
+    trayTap('Battleship');
+    finger.drag('A5', 'B1');
+    expect(preview()).toEqual({ valid: [], invalid: ['B1', 'C1', 'D1', 'E1'] });
+
+    const down = finger.down('A1');
+    finger.moveTo('A7');
+    finger.up(true);
+    expect(down.defaultPrevented).toBe(false);
+    expect(status()).toBe('Move the Battleship to a green spot first.');
+    expect(shipsOnBoard()).toEqual({ Carrier: ['A1', 'B1', 'C1', 'D1', 'E1'] });
+    expect(selectedShipName()).toBe('Battleship');
+    expect(preview()).toEqual({ valid: [], invalid: ['B1', 'C1', 'D1', 'E1'] });
+  });
+
+  it('dragging the held ship over a placed ship, or touching an empty square, still just moves it', () => {
+    trayTap('Carrier');
+    tap('A1');
+    trayTap('Battleship');
+    finger.down('A3');
+    finger.moveTo('A1');
+    expect(preview()).toEqual({ valid: [], invalid: ['A1', 'B1', 'C1', 'D1'] });
+    finger.moveTo('A5');
+    finger.up();
+    expect(preview()).toEqual({ valid: ['A5', 'B5', 'C5', 'D5'], invalid: [] });
+    tap('F8');
+    expect(preview()).toEqual({ valid: ['F8', 'G8', 'H8', 'I8'], invalid: [] });
+    expect(shipsOnBoard()).toEqual({ Carrier: ['A1', 'B1', 'C1', 'D1', 'E1'] });
+    expect(selectedShipName()).toBe('Battleship');
+  });
+
   it('locks the last ship with Start battle (only on green) or by tapping it in the tray again', () => {
     const spots = ['A1', 'A3', 'A5', 'A7', 'A9'];
     FLEET.forEach((spec, i) => {
