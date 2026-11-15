@@ -11,6 +11,7 @@ Classic Battleship in the browser against a computer opponent. Nothing to instal
 - **Ship placement:** place your five ships by hand (click or tap, press R or tap Rotate to turn them) or randomize them, and move any ship before the battle starts.
 - **Score counter:** during battle, a compact bar shows shots fired, hits and accuracy % for you and for the AI, updated after every shot.
 - **Restart:** a Restart button is available as soon as the battle starts. It asks for confirmation in the page ("Restart the game? Your current progress will be lost."). Restart takes you back to setup against a fresh enemy fleet. Cancel, Esc or a click outside the dialog returns you to the game exactly as it was. The AI's turn is paused while the dialog is open, so it can't fire after you restart.
+- **Touch placement on phones and tablets.** Tap a ship in the tray, then touch your board: the ship appears under your finger and follows it while you drag (Rotate turns it, even mid-drag). Tapping the next ship locks the current one in place; a ship on a red spot never locks. Touch a placed ship to pick it up and drag it, or tap another square. The page doesn't scroll or zoom while you drag on your board. Mouse placement on desktop is unchanged.
 - **Works on mobile:** the boards stack on small screens and everything works by tapping.
 
 ## How it was built
