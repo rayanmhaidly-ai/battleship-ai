@@ -8,7 +8,7 @@ Classic Battleship in the browser against a computer opponent. Nothing to instal
 
 ## Features
 
-- **Touch placement on phones and tablets.** Tap a ship in the tray, then touch your board: the ship appears under your finger and follows it while you drag (Rotate turns it, even mid-drag). Tapping the next ship locks the current one in place; a ship on a red spot never locks. Touch a placed ship to pick it up and drag it, or tap another square. The page doesn't scroll or zoom while you drag on your board. Mouse placement on desktop is unchanged.
+- **Touch placement on phones and tablets.** Tap a ship in the tray, then touch your board: the ship appears under your finger and follows it while you drag (Rotate turns it, even mid-drag). Tapping the next ship locks the current one in place; a ship on a red spot never locks. Touch a placed ship to pick it up and drag it, or tap another square. While you hold a ship, touching another placed ship locks the held one (only if it's on green) and picks the touched one up. The page doesn't scroll or zoom while you drag on your board. Mouse placement on desktop is unchanged.
 
 ## How it was built
 
